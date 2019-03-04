@@ -1,12 +1,9 @@
 module Main where
 
 import           Lib
-
-import qualified Text.MeCab                    as M
+import           Markov
+import           Control.Monad
 
 main :: IO ()
-main = do
-  mcb <- M.new2 ""
-  s   <- M.parse mcb "今日もいい天気"
+main = putStrLn "Constructing"
 
-  putStrLn s
