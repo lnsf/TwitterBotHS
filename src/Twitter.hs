@@ -2,6 +2,8 @@
 module Twitter
   ( getTweets
   , postTweet
+  , rmvMine
+  , fromTweet
   )
 where
 
@@ -12,12 +14,13 @@ import           GHC.Generics
 import           Data.Aeson
 import           Data.Text
 import           Data.Text.Encoding
+import qualified Data.List                     as L
 import qualified Data.ByteString.Char8         as B8
 import qualified Data.ByteString.Lazy.Internal as BL
 
 userName = "user name"
 
-newtype User = User {screen_name :: Text} deriving (Show, Generic)
+newtype User = User {screen_name :: String} deriving (Show, Generic)
 data Tweet = Tweet {text :: Text, user :: User} deriving (Show, Generic)
 
 instance FromJSON Tweet
@@ -29,7 +32,9 @@ auth = newOAuth { oauthServerName     = "api.twitter.com"
                 , oauthConsumerKey    = B8.pack "ck"
                 , oauthConsumerSecret = B8.pack "cs"
                 }
-cred = newCredential (B8.pack "at") (B8.pack "as")
+cred = newCredential
+  (B8.pack "at")
+  (B8.pack "as")
 
 
 getTweets :: IO (Either String [Tweet])
@@ -52,5 +57,9 @@ postTweet s = do
     httpLbs signedReq man
   return $ (statusCode . responseStatus) res == 200
 
+rmvMine :: [Tweet] -> [Tweet]
+rmvMine = L.foldr (\tw -> (++) [ tw | (screen_name . user) tw /= userName ]) []
 
+fromTweet :: Tweet -> Text
+fromTweet = text
 
