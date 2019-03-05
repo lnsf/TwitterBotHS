@@ -17,16 +17,19 @@ import qualified Data.ByteString.Lazy.Internal as BL
 
 userName = "user name"
 
-newtype Tweet = Tweet {text :: Text} deriving (Show, Generic)
+newtype User = User {screen_name :: Text} deriving (Show, Generic)
+data Tweet = Tweet {text :: Text, user :: User} deriving (Show, Generic)
 
 instance FromJSON Tweet
+instance FromJSON User
 instance ToJSON Tweet
+instance ToJSON User
 
 auth = newOAuth { oauthServerName     = "api.twitter.com"
-                , oauthConsumerKey    = B8.pack "consumer key"
-                , oauthConsumerSecret = B8.pack "consumer key secret"
+                , oauthConsumerKey    = B8.pack "ck"
+                , oauthConsumerSecret = B8.pack "cs"
                 }
-cred = newCredential (B8.pack "access token") (B8.pack "access token secret")
+cred = newCredential (B8.pack "at") (B8.pack "as")
 
 
 getTweets :: IO (Either String [Tweet])
