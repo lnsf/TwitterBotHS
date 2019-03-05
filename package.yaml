@@ -13,9 +13,15 @@ tests:
 copyright: 2019 lnsf
 maintainer: lnsf03@gmail.com
 dependencies:
+- http-types
 - split
 - base >= 4.7 && < 5
 - mecab
+- http-conduit
+- authenticate-oauth
+- aeson
+- bytestring
+- text
 name: TwitterBotHS
 version: 0.1.0.0
 extra-source-files:
