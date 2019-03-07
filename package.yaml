@@ -13,6 +13,7 @@ tests:
 copyright: 2019 lnsf
 maintainer: lnsf03@gmail.com
 dependencies:
+- random
 - http-types
 - split
 - base >= 4.7 && < 5
