@@ -7,6 +7,8 @@ module Twitter
   )
 where
 
+import           Config
+
 import           Web.Authenticate.OAuth
 import           Network.HTTP.Conduit
 import           Network.HTTP.Types
@@ -28,11 +30,18 @@ instance FromJSON User
 instance ToJSON Tweet
 instance ToJSON User
 
-auth = newOAuth { oauthServerName     = "api.twitter.com"
-                , oauthConsumerKey    = B8.pack "ck"
-                , oauthConsumerSecret = B8.pack "cs"
-                }
-cred = newCredential (B8.pack "at") (B8.pack "as")
+getKeys :: IO Keys
+getKeys = keys <$> getConfig
+
+getAuth = do
+  keys <- getKeys
+  return $ newOAuth { oauthServerName     = "api.twitter.com"
+                    , oauthConsumerKey    = (B8.pack . ck) keys
+                    , oauthConsumerSecret = (B8.pack . cs) keys
+                    }
+getCred = do
+  keys <- getKeys
+  return $ newCredential ((B8.pack . at) keys) ((B8.pack . as) keys)
 
 
 getTweets :: IO (Either String [Tweet])
@@ -40,6 +49,8 @@ getTweets = do
   res <- do
     req <- parseRequest
       "https://api.twitter.com/1.1/statuses/home_timeline.json?count=200"
+    auth      <- getAuth
+    cred      <- getCred
     signedReq <- signOAuth auth cred req
     man       <- newManager tlsManagerSettings
     httpLbs signedReq man
@@ -51,6 +62,8 @@ postTweet s = do
     req <- parseRequest "https://api.twitter.com/1.1/statuses/update.json"
     man <- newManager tlsManagerSettings
     let postReq = urlEncodedBody [(B8.pack "status", encodeUtf8 s)] req
+    auth      <- getAuth
+    cred      <- getCred
     signedReq <- signOAuth auth cred postReq
     httpLbs signedReq man
   return $ (statusCode . responseStatus) res == 200
