@@ -1,0 +1,5 @@
+keys:
+  ck: consumer key
+  cs: consumer key secret
+  at: access token
+  as: access token secret
