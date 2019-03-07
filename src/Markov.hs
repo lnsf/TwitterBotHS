@@ -2,16 +2,17 @@ module Markov
   ( createBlocks
   , tokenize
   , connectBlocks
-  , toText
+  , fromBlocks
   , Block
   )
 where
+
+import           Lib                            ( takeRdm )
 
 import           Text.MeCab
 import           Data.List.Split
 import           Data.List
 import qualified Data.Text                     as T
-import qualified System.Random                 as R
 
 type Block = (T.Text, T.Text, T.Text)
 
@@ -50,14 +51,8 @@ connectBlocks b bs = do
       b3 <- getNext b2 (bs \\ [b2])
       return $ b2 : b3
 
-takeRdm :: [a] -> IO a
-takeRdm [] = error "Empty list"
-takeRdm xs = do
-  idx <- R.getStdRandom (R.randomR (0, length xs - 1))
-  return $ xs !! idx
-
-toText :: [Block] -> T.Text
-toText = foldr (\b -> T.append (bfst b `T.append` bsnd b)) T.empty
+fromBlocks :: [Block] -> T.Text
+fromBlocks = foldr (\b -> T.append (bfst b `T.append` bsnd b)) T.empty
 
 bfst (f, _, _) = f
 bsnd (_, s, _) = s

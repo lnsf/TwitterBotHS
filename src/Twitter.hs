@@ -12,16 +12,16 @@ import           Network.HTTP.Conduit
 import           Network.HTTP.Types
 import           GHC.Generics
 import           Data.Aeson
-import           Data.Text
+import           Data.List
 import           Data.Text.Encoding
-import qualified Data.List                     as L
+import qualified Data.Text                     as T
 import qualified Data.ByteString.Char8         as B8
 import qualified Data.ByteString.Lazy.Internal as BL
 
-userName = "user name"
+userName = "name"
 
 newtype User = User {screen_name :: String} deriving (Show, Generic)
-data Tweet = Tweet {text :: Text, user :: User} deriving (Show, Generic)
+data Tweet = Tweet {text :: T.Text, user :: User} deriving (Show, Generic)
 
 instance FromJSON Tweet
 instance FromJSON User
@@ -32,22 +32,20 @@ auth = newOAuth { oauthServerName     = "api.twitter.com"
                 , oauthConsumerKey    = B8.pack "ck"
                 , oauthConsumerSecret = B8.pack "cs"
                 }
-cred = newCredential
-  (B8.pack "at")
-  (B8.pack "as")
+cred = newCredential (B8.pack "at") (B8.pack "as")
 
 
 getTweets :: IO (Either String [Tweet])
 getTweets = do
   res <- do
     req <- parseRequest
-      "https://api.twitter.com/1.1/statuses/home_timeline.json"
+      "https://api.twitter.com/1.1/statuses/home_timeline.json?count=200"
     signedReq <- signOAuth auth cred req
     man       <- newManager tlsManagerSettings
     httpLbs signedReq man
   return $ eitherDecode $ responseBody res
 
-postTweet :: Text -> IO Bool
+postTweet :: T.Text -> IO Bool
 postTweet s = do
   res <- do
     req <- parseRequest "https://api.twitter.com/1.1/statuses/update.json"
@@ -58,8 +56,8 @@ postTweet s = do
   return $ (statusCode . responseStatus) res == 200
 
 rmvMine :: [Tweet] -> [Tweet]
-rmvMine = L.foldr (\tw -> (++) [ tw | (screen_name . user) tw /= userName ]) []
+rmvMine = foldr (\tw -> (++) [ tw | (screen_name . user) tw /= userName ]) []
 
-fromTweet :: Tweet -> Text
+fromTweet :: Tweet -> T.Text
 fromTweet = text
 
