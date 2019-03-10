@@ -6,6 +6,7 @@ module Config
   , cs
   , at
   , as
+  , name
   , Keys
   )
 where
@@ -15,7 +16,7 @@ import qualified Data.ByteString               as BS
 import qualified Data.ByteString.Char8         as B8
 import qualified Data.Yaml                     as Y
 
-newtype Config = Config{keys :: Keys} deriving (Show, Generic)
+data Config = Config{name :: String, keys :: Keys} deriving (Show, Generic)
 data Keys = Keys{ck :: String, cs :: String, at :: String, as :: String} deriving (Show, Generic)
 
 instance Y.FromJSON Config
