@@ -9,11 +9,8 @@ import qualified Data.Text                     as T
 
 main :: IO ()
 main = do
-  ts <- do
-    t <- getTweets
-    case t of
-      Left  er  -> error "Can't get tweets"
-      Right tws -> (return . rmvUnneeds . map fromTweet) tws
+  ts <- rmvUnneeds . map fromTweet <$> getTweets
+
 
   bs <- forM ts $ \t -> do
     ws <- tokenize t

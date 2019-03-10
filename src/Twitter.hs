@@ -20,8 +20,6 @@ import qualified Data.Text                     as T
 import qualified Data.ByteString.Char8         as B8
 import qualified Data.ByteString.Lazy.Internal as BL
 
-userName = "name"
-
 newtype User = User {screen_name :: String} deriving (Show, Generic)
 data Tweet = Tweet {text :: T.Text, user :: User} deriving (Show, Generic)
 
@@ -29,6 +27,9 @@ instance FromJSON Tweet
 instance FromJSON User
 instance ToJSON Tweet
 instance ToJSON User
+
+getName :: IO String
+getName = name <$> getConfig
 
 getKeys :: IO Keys
 getKeys = keys <$> getConfig
@@ -44,7 +45,7 @@ getCred = do
   return $ newCredential ((B8.pack . at) keys) ((B8.pack . as) keys)
 
 
-getTweets :: IO (Either String [Tweet])
+getTweets :: IO [Tweet]
 getTweets = do
   res <- do
     req <- parseRequest
@@ -54,7 +55,8 @@ getTweets = do
     signedReq <- signOAuth auth cred req
     man       <- newManager tlsManagerSettings
     httpLbs signedReq man
-  return $ eitherDecode $ responseBody res
+  return . either (error . show) id <$> eitherDecode $ responseBody res
+
 
 postTweet :: T.Text -> IO Bool
 postTweet s = do
@@ -68,8 +70,10 @@ postTweet s = do
     httpLbs signedReq man
   return $ (statusCode . responseStatus) res == 200
 
-rmvMine :: [Tweet] -> [Tweet]
-rmvMine = foldr (\tw -> (++) [ tw | (screen_name . user) tw /= userName ]) []
+rmvMine :: [Tweet] -> IO [Tweet]
+rmvMine ts = do
+  n <- getName
+  return $ foldr (\tw -> (++) [ tw | (screen_name . user) tw /= n ]) [] ts
 
 fromTweet :: Tweet -> T.Text
 fromTweet = text
