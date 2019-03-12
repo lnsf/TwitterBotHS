@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Twitter (getTweets, postTweet, rmvMine, fromTweet) where
+module Twitter (getTweets, postTweet, rmvUnneeds, fromTweet) where
 
 import           Config
 import           Web.Authenticate.OAuth
@@ -17,14 +17,12 @@ import qualified Data.ByteString.Lazy.Internal as BL
 newtype User = User { screen_name :: String }
   deriving (Show, Generic)
 
-data Tweet = Tweet { text :: T.Text, user :: User }
+data Tweet = Tweet { text :: T.Text, user :: User, id :: Int }
   deriving (Show, Generic)
 
 instance FromJSON Tweet
 
 instance FromJSON User
-
-instance ToJSON Tweet
 
 instance ToJSON User
 
@@ -56,7 +54,10 @@ getTweets = do
     signedReq <- signOAuth auth cred req
     man <- newManager tlsManagerSettings
     httpLbs signedReq man
-  return . either (error . show) id <$> eitherDecode $ responseBody res
+  let dc = eitherDecode $ responseBody res
+  case dc of
+    Left er  -> error er
+    Right ts -> rmvUnneeds ts
 
 postTweet :: T.Text -> IO Bool
 postTweet s = do
@@ -70,11 +71,23 @@ postTweet s = do
     httpLbs signedReq man
   return $ (statusCode . responseStatus) res == 200
 
-rmvMine :: [Tweet] -> IO [Tweet]
-rmvMine ts = do
-  n <- getName
-  return $ foldr (\tw -> (++) [tw | (screen_name . user) tw /= n]) [] ts
+rmvUnneeds :: [Tweet] -> IO [Tweet]
+rmvUnneeds = byName . byText
+  where
+    byName :: [Tweet] -> IO [Tweet]
+    byName ts = do
+      n <- getName
+      return $ foldr (\tw -> (++) [tw | (screen_name . user) tw /= n]) [] ts
 
-fromTweet :: Tweet -> T.Text
-fromTweet = text
+    byText :: [Tweet] -> [Tweet]
+    byText [] = []
+    byText (tw:tws) = [tw | (ok . text) tw] ++ byText tws
+      where
+        ok :: T.Text -> Bool
+        ok tw = all
+          (\p -> not (T.isInfixOf (T.pack p) tw))
+          ["https", "http", "RT @", "@", "#"]
+
+fromTweet :: Tweet -> (T.Text, Int)
+fromTweet t = (text t, Twitter.id t)
 

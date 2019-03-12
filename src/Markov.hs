@@ -1,18 +1,11 @@
-module Markov
-    ( createMcb
-    , createBlocks
-    , tokenize
-    , connectBlocks
-    , fromBlocks
-    , Block) where
+module Markov (createMcb, createBlocks, tokenize, connectBlocks, fromBlocks) where
 
+import           Types
 import           Lib (takeRdm)
 import           Text.MeCab
 import           Data.List.Split
 import           Data.List
 import qualified Data.Text as T
-
-type Block = (T.Text, T.Text, T.Text)
 
 createMcb :: IO MeCab
 createMcb = new2 ""
