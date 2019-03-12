@@ -1,25 +1,20 @@
 {-# LANGUAGE DeriveGeneric #-}
-module Config
-  ( getConfig
-  , keys
-  , ck
-  , cs
-  , at
-  , as
-  , name
-  , Keys
-  )
-where
+
+module Config (getConfig, keys, ck, cs, at, as, name, Keys) where
 
 import           GHC.Generics
-import qualified Data.ByteString               as BS
-import qualified Data.ByteString.Char8         as B8
-import qualified Data.Yaml                     as Y
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as B8
+import qualified Data.Yaml as Y
 
-data Config = Config{name :: String, keys :: Keys} deriving (Show, Generic)
-data Keys = Keys{ck :: String, cs :: String, at :: String, as :: String} deriving (Show, Generic)
+data Config = Config { name :: String, keys :: Keys }
+  deriving (Show, Generic)
+
+data Keys = Keys { ck :: String, cs :: String, at :: String, as :: String }
+  deriving (Show, Generic)
 
 instance Y.FromJSON Config
+
 instance Y.FromJSON Keys
 
 getConfig :: IO Config
