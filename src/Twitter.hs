@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Twitter (getTweets, postTweet, rmvUnneeds, fromTweet) where
+module Twitter (getTweets, postTweet, fromTweet) where
 
 import           Config
 import           Web.Authenticate.OAuth
@@ -8,16 +8,16 @@ import           Network.HTTP.Conduit
 import           Network.HTTP.Types
 import           GHC.Generics
 import           Data.Aeson
-import           Data.List
 import           Data.Text.Encoding
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as B8
-import qualified Data.ByteString.Lazy.Internal as BL
+
+type Name = String
 
 newtype User = User { screen_name :: String }
   deriving (Show, Generic)
 
-data Tweet = Tweet { text :: T.Text, user :: User, id :: Int }
+data Tweet = Tweet { text :: T.Text, user :: User, id :: Integer }
   deriving (Show, Generic)
 
 instance FromJSON Tweet
@@ -57,7 +57,7 @@ getTweets = do
   let dc = eitherDecode $ responseBody res
   case dc of
     Left er  -> error er
-    Right ts -> rmvUnneeds ts
+    Right ts -> flip rmvUnneeds ts <$> getName
 
 postTweet :: T.Text -> IO Bool
 postTweet s = do
@@ -71,13 +71,11 @@ postTweet s = do
     httpLbs signedReq man
   return $ (statusCode . responseStatus) res == 200
 
-rmvUnneeds :: [Tweet] -> IO [Tweet]
-rmvUnneeds = byName . byText
+rmvUnneeds :: Name -> [Tweet] -> [Tweet]
+rmvUnneeds n = byName n . byText
   where
-    byName :: [Tweet] -> IO [Tweet]
-    byName ts = do
-      n <- getName
-      return $ foldr (\tw -> (++) [tw | (screen_name . user) tw /= n]) [] ts
+    byName :: Name -> [Tweet] -> [Tweet]
+    byName n = foldr (\tw -> (++) [tw | (screen_name . user) tw /= n]) []
 
     byText :: [Tweet] -> [Tweet]
     byText [] = []
@@ -88,6 +86,6 @@ rmvUnneeds = byName . byText
           (\p -> not (T.isInfixOf (T.pack p) tw))
           ["https", "http", "RT @", "@", "#"]
 
-fromTweet :: Tweet -> (T.Text, Int)
+fromTweet :: Tweet -> (T.Text, Integer)
 fromTweet t = (text t, Twitter.id t)
 

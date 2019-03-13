@@ -1,7 +1,7 @@
-module Markov (createMcb, createBlocks, tokenize, connectBlocks, fromBlocks) where
+module Markov where
 
-import           Types
-import           Lib (takeRdm)
+import           Lib
+import           Data.Block
 import           Text.MeCab
 import           Data.List.Split
 import           Data.List
@@ -24,21 +24,25 @@ tokenize mcb s = do
                             then w1:T.pack " ":addSpace (w2:ws)
                             else w1:addSpace (w2:ws)
 
+      -- onlyAlp "Hello" "World" = True
+      -- onlyAlp "Hello" "こんにちは" = False
       onlyAlp :: T.Text -> T.Text -> Bool
       onlyAlp w1 w2 = not (T.null w1 || T.null w2)
-        && all (T.all (`elem` ['A' .. 'z'])) [w1, w2]
+        && all (T.all (`elem` ['A' .. 'Z'] ++ ['a' .. 'z'])) [w1, w2]
 
-createBlocks :: [T.Text] -> [Block]
-createBlocks [f, s] = []
-createBlocks (f:s:t:ws) = (f, s, t):createBlocks (s:t:ws)
+createBlocks :: [T.Text] -> Integer -> [Block]
+createBlocks [f, s] _ = []
+createBlocks (f:s:t:ws) i = newBlock (f, s, t) i:createBlocks (s:t:ws) i
 
 connectBlocks :: Block -> [Block] -> IO [Block]
 connectBlocks b bs = do
   next <- getNext b bs
   return $ b:next
   where
-    cancon b bs = [x | x <- bs, bfst x == blst b]
+    cancon :: Block -> [Block] -> [Block]
+    cancon b bs = [x | x <- bs, (get1 . block) x == (get3 . block) b]
 
+    getNext :: Block -> [Block] -> IO [Block]
     getNext b bs = if null $ cancon b bs
                    then return []
                    else do
@@ -46,11 +50,10 @@ connectBlocks b bs = do
                      b3 <- getNext b2 (bs \\ [b2])
                      return $ b2:b3
 
-fromBlocks :: [Block] -> T.Text
-fromBlocks = foldr (\b -> T.append (bfst b `T.append` bsnd b)) T.empty
-
-bfst (f, _, _) = f
-
-bsnd (_, s, _) = s
-
-blst (_, _, l) = l
+fromBlocks :: [Block] -> (T.Text, [Integer])
+fromBlocks xs =
+  ( foldr
+      (\b -> T.append ((get1 . block) b `T.append` (get2 . block) b))
+      T.empty
+      xs
+  , map Data.Block.id xs)
