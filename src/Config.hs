@@ -1,10 +1,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Config (getConfig, keys, ck, cs, at, as, name, Keys) where
+module Config where
 
 import           GHC.Generics
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as B8
 import qualified Data.Yaml as Y
 
 data Config = Config { name :: String, keys :: Keys }
