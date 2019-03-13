@@ -39,7 +39,8 @@ packages:
 # (e.g., acme-missiles-0.3)
 # extra-deps: []
 extra-deps:
-- mecab-0.4.0@sha256:e3fb1f68f0b800f13010f713236eec895a3b6ab42264a1ce6d58b7490a28a4ea
+- github: lnsf/hsmecab
+  commit: 0887edaf79d86ba5d303dbfb5e09e00f38f240c7
 # Override default flag values for local packages and extra-deps
 # flags: {}
 
