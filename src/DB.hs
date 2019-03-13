@@ -8,8 +8,11 @@ import           Database.PostgreSQL.Simple
 import qualified Data.Text as T
 
 createConnection :: IO Connection
-createConnection =
-  connect $ defaultConnectInfo { connectUser = "bot", connectDatabase = "bot" }
+createConnection = connect
+  $ defaultConnectInfo { connectUser = "bot"
+                       , connectDatabase = "bot"
+                       , connectPassword = "postgres"
+                       }
 
 addToDB :: Connection -> DBEntry -> IO ()
 addToDB con (a, b, c, i) = do
