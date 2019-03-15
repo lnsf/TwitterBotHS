@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Twitter (getTweets, postTweet, fromTweet) where
+module Twitter (getTweets, getTweetsAfter, postTweet, fromTweet) where
 
 import           Config
 import           Web.Authenticate.OAuth
@@ -43,6 +43,9 @@ getAuth = do
 getCred = do
   keys <- getKeys
   return $ newCredential ((B8.pack . at) keys) ((B8.pack . as) keys)
+
+getTweetsAfter :: Integer -> IO [Tweet]
+getTweetsAfter minId = dropWhile (\t -> Twitter.id t <= minId) <$> getTweets
 
 getTweets :: IO [Tweet]
 getTweets = do
