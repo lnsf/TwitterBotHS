@@ -1,7 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module DB (createConnection, addToDB, readDB, getLatestId, deleteById) where
+module DB
+    ( createConnection
+    , addToDB
+    , readDB
+    , getLatestId
+    , deleteById
+    , deleteAll) where
 
 import           Lib
 import           Data.Block
@@ -36,11 +42,17 @@ deleteById con id_ = do
   execute con "DELETE FROM words WHERE id = ?" [id_]
   return ()
 
+deleteAll :: Connection -> IO ()
+deleteAll con = do
+  execute_ con "DELETE FROM words"
+  return ()
+
 readDB :: Connection -> IO [Block]
 readDB con = toBlock <$> query_ con "SELECT * FROM words"
 
 getLatestId :: Connection -> IO Integer
-getLatestId con = getId . head <$> query_ con "SELECT MAX(id) FROM words" :: IO Integer
+getLatestId con =
+  getId . head <$> query_ con "SELECT MAX(id) FROM words" :: IO Integer
 
 toBlock :: [(T.Text, T.Text, T.Text, Integer)] -> [Block]
 toBlock [] = []

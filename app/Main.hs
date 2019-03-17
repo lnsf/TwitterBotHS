@@ -22,6 +22,7 @@ main = doTask =<< getArgs
     doTask [] = usage >> exitFailure
     doTask (arg:_)
       | arg `isPrefixOf` "add" = add
+      | arg `isPrefixOf` "clean" = clean
       | arg `isPrefixOf` "tweet" = tweet
       | arg `isPrefixOf` "help" = usage >> exitSuccess
       | otherwise = usage >> exitFailure
@@ -58,6 +59,9 @@ tweet = do
   forM_ (snd tw) $ \id -> deleteById c id
   where
     takeHeads = filter (\b -> (get1 . block) b == T.empty)
+
+clean :: IO ()
+clean = deleteAll =<< createConnection
 
 createTweet hs bs = do
   h <- takeRdm hs
