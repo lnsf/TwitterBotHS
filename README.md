@@ -8,6 +8,12 @@ Twitter Bot with PostgreSQL, MeCab, and Haskell
 ```
 tbot add
 ```
+
+- Clean database.
+```
+tbot clean
+```
+
 - Post tweet.
 ```
 tbot tweet
