@@ -40,6 +40,7 @@ add = do
   bs <- concat <$> mapM (\(t, i) -> flip createBlocks i <$> tokenize m t) ts
     :: IO [Block]
   mapM_ (addToDB c) bs
+  putStrLn $ "Added " ++ (show . length) bs ++ " Blocks"
 
 tweet :: IO ()
 tweet = do
