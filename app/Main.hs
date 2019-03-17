@@ -17,7 +17,7 @@ main = doTask =<< getArgs
   where
     usage = do
       pname <- getProgName
-      putStrLn $ "Usage: " ++ pname ++ " [add|tweet|help]"
+      putStrLn $ "Usage: " ++ pname ++ " [add|clean|tweet|help]"
 
     doTask [] = usage >> exitFailure
     doTask (arg:_)
