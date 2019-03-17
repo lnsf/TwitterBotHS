@@ -31,10 +31,10 @@ extra-source-files:
 - README.md
 - ChangeLog.md
 author: lnsf
-github: lnsf/TwitterBotHS
+github: lnsf/DBTwitterBot
 license: BSD3
 executables:
-  TwitterBotHS-exe:
+  tbot:
     source-dirs: app
     main: Main.hs
     ghc-options:
