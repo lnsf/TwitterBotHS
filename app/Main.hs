@@ -66,9 +66,11 @@ clean = deleteAll =<< createConnection
 createTweet hs bs = do
   h <- takeRdm hs
   tw <- fromBlocks <$> connectBlocks h (bs \\ [h])
+  -- length < 20
+  -- bring in from more than 2 tweets
   if isMatch tw
     then return tw
     else createTweet hs bs
   where
-    isMatch (str, ids) = T.length str <= 50
-      && (maximum . map length . group) ids < length ids `div` 2
+    isMatch (str, ids) = T.length str <= 20
+      && (length . nub) ids > 1
