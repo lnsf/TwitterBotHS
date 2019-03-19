@@ -42,14 +42,12 @@ keys:
 
 ## Database Setup
 
-Install and enable PostgreSQL.
+Install PostgreSQL.
 
 ```bash
 $ sudo apt update
 $ sudo apt install postgresql -y
-
-$ sudo systemctl enable postgresql
-$ sudo systemctl start postgresql
+$ sudo apt install postgresql-server-dev-(version) -y
 ```
 
 Disable peer authentication.  
@@ -60,10 +58,11 @@ Disable peer authentication.
 local all all md5
 ```
 
-Then
+Then start service
 
 ```bash
-sudo systemctl restart postgresql
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
 ```
 
 Create user "bot" with password "postgres".
