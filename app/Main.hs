@@ -72,5 +72,7 @@ createTweet hs bs = do
     then return tw
     else createTweet hs bs
   where
-    isMatch (str, ids) = T.length str <= 20
-      && (length . nub) ids > 1
+    isMatch (str, ids) = T.length str <= 30 && cost ids < length ids `div` 2
+
+    cost :: [Integer] -> Int
+    cost = sum . map (flip (-) 1 . length) . group
