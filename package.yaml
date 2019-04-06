@@ -35,12 +35,19 @@ github: lnsf/DBTwitterBot
 license: BSD3
 executables:
   tbot:
-    source-dirs: app
-    main: Main.hs
+    main: app/Main.hs
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - TwitterBotHS
-description: Please see the README on GitHub at <https://github.com/githubuser/TwitterBotHS#readme>
+  tbot-rep:
+    main: app/MainRep.hs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - TwitterBotHS
+description: Please see the README on GitHub at <https://github.com/lnsf/DBTwitterBot#readme>
