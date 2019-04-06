@@ -1,10 +1,11 @@
-module Twitter (getTweets, getTweetsAfter, postTweet) where
+module Twitter (getTweets, getUserTweets, getMentions, getTweetsAfter, postTweet, postReply, createFab) where
 
 import           Config
 import           Web.Authenticate.OAuth
 import           Network.HTTP.Conduit
 import           Network.HTTP.Types
 import           Data.Aeson
+import           Data.Mention
 import           Data.Text.Encoding
 import           Data.Tweet
 import qualified Data.Text as T
@@ -34,8 +35,10 @@ getTweetsAfter minId = dropWhile (\t -> tweetId t <= minId) <$> getTweets
 getTweets :: IO [Tweet]
 getTweets = do
   res <- do
-    req <- parseRequest
-      "https://api.twitter.com/1.1/statuses/home_timeline.json?count=200"
+    req <- setQueryString
+      [(B8.pack "count", Just (B8.pack "200"))] 
+     <$> parseRequest
+      "https://api.twitter.com/1.1/statuses/home_timeline.json"
     auth <- getAuth
     cred <- getCred
     signedReq <- signOAuth auth cred req
@@ -44,7 +47,53 @@ getTweets = do
   let dc = eitherDecode $ responseBody res
   case dc of
     Left er  -> error er
-    Right ts -> ((removeByText .) . removeByName) <$> getName <*> pure ts
+    Right ts -> (removeByText .) . removeByName <$> getName <*> pure ts
+
+getUserTweets :: String -> IO [Tweet]
+getUserTweets user = do
+  res <- do
+    req <- setQueryString
+      [ (B8.pack "count", Just (B8.pack "200"))
+      , (B8.pack "screen_name", Just (B8.pack user))]
+      <$> parseRequest
+        "https://api.twitter.com/1.1/statuses/user_timeline.json"
+    auth <- getAuth
+    cred <- getCred
+    signedReq <- signOAuth auth cred req
+    man <- newManager tlsManagerSettings
+    httpLbs signedReq man
+  let dc = eitherDecode $ responseBody res
+  case dc of
+    Left er  -> error er
+    Right ts -> return $ removeByText ts
+
+getMentions :: IO [Mention]
+getMentions = do
+  res <- do
+    req <- setQueryString
+      [ (B8.pack "count", Just (B8.pack "200")) ]
+      <$> parseRequest
+        "https://api.twitter.com/1.1/statuses/mentions_timeline.json"
+    auth <- getAuth
+    cred <- getCred
+    signedReq <- signOAuth auth cred req
+    man <- newManager tlsManagerSettings
+    httpLbs signedReq man
+  let dc = eitherDecode $ responseBody res
+  case dc of
+    Left er  -> error er
+    Right ts -> (\n -> filter (match n) ts) <$> getName
+  where
+    match :: String -> Mention -> Bool
+    match n m = isConversation m && isReplyToMe n m && (not . favorited) m
+
+    isReplyToMe n m = case replyTo m of
+      Just x  -> x == n
+      Nothing -> False
+
+    isConversation m = case isReply m of
+      Nothing -> False
+      Just _  -> True
 
 postTweet :: T.Text -> IO Bool
 postTweet s = do
@@ -52,6 +101,32 @@ postTweet s = do
     req <- parseRequest "https://api.twitter.com/1.1/statuses/update.json"
     man <- newManager tlsManagerSettings
     let postReq = urlEncodedBody [(B8.pack "status", encodeUtf8 s)] req
+    auth <- getAuth
+    cred <- getCred
+    signedReq <- signOAuth auth cred postReq
+    httpLbs signedReq man
+  return $ (statusCode . responseStatus) res == 200
+
+postReply :: Integer -> T.Text -> IO Bool
+postReply i s = do
+  res <- do
+    req <- parseRequest "https://api.twitter.com/1.1/statuses/update.json"
+    man <- newManager tlsManagerSettings
+    let postReq = urlEncodedBody [ (B8.pack "status", encodeUtf8 s)
+                                 , (B8.pack "in_reply_to_status_id", (encodeUtf8 . T.pack . show) i)
+                                 ] req
+    auth <- getAuth
+    cred <- getCred
+    signedReq <- signOAuth auth cred postReq
+    httpLbs signedReq man
+  return $ (statusCode . responseStatus) res == 200
+
+createFab :: Integer -> IO Bool
+createFab i = do
+  res <- do
+    req <- parseRequest "https://api.twitter.com/1.1/favorites/create.json"
+    man <- newManager tlsManagerSettings
+    let postReq = urlEncodedBody [(B8.pack "id", (encodeUtf8 . T.pack . show) i)] req
     auth <- getAuth
     cred <- getCred
     signedReq <- signOAuth auth cred postReq
