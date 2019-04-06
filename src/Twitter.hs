@@ -1,30 +1,14 @@
-{-# LANGUAGE DeriveGeneric #-}
-
-module Twitter (getTweets, getTweetsAfter, postTweet, fromTweet) where
+module Twitter (getTweets, getTweetsAfter, postTweet) where
 
 import           Config
 import           Web.Authenticate.OAuth
 import           Network.HTTP.Conduit
 import           Network.HTTP.Types
-import           GHC.Generics
 import           Data.Aeson
 import           Data.Text.Encoding
+import           Data.Tweet
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as B8
-
-type Name = String
-
-newtype User = User { screen_name :: String }
-  deriving (Show, Generic)
-
-data Tweet = Tweet { text :: T.Text, user :: User, id :: Integer }
-  deriving (Show, Generic)
-
-instance FromJSON Tweet
-
-instance FromJSON User
-
-instance ToJSON User
 
 getName :: IO String
 getName = name <$> getConfig
@@ -45,7 +29,7 @@ getCred = do
   return $ newCredential ((B8.pack . at) keys) ((B8.pack . as) keys)
 
 getTweetsAfter :: Integer -> IO [Tweet]
-getTweetsAfter minId = dropWhile (\t -> Twitter.id t <= minId) <$> getTweets
+getTweetsAfter minId = dropWhile (\t -> tweetId t <= minId) <$> getTweets
 
 getTweets :: IO [Tweet]
 getTweets = do
@@ -60,7 +44,7 @@ getTweets = do
   let dc = eitherDecode $ responseBody res
   case dc of
     Left er  -> error er
-    Right ts -> flip rmvUnneeds ts <$> getName
+    Right ts -> ((removeByText .) . removeByName) <$> getName <*> pure ts
 
 postTweet :: T.Text -> IO Bool
 postTweet s = do
@@ -74,21 +58,13 @@ postTweet s = do
     httpLbs signedReq man
   return $ (statusCode . responseStatus) res == 200
 
-rmvUnneeds :: Name -> [Tweet] -> [Tweet]
-rmvUnneeds n = byName n . byText
+removeByName :: String -> [Tweet] -> [Tweet]
+removeByName n = filter (\t -> (screen_name . user) t /= n)
+
+removeByText :: [Tweet] -> [Tweet]
+removeByText = filter (ok . text)
   where
-    byName :: Name -> [Tweet] -> [Tweet]
-    byName n = foldr (\tw -> (++) [tw | (screen_name . user) tw /= n]) []
-
-    byText :: [Tweet] -> [Tweet]
-    byText [] = []
-    byText (tw:tws) = [tw | (ok . text) tw] ++ byText tws
-      where
-        ok :: T.Text -> Bool
-        ok tw = all
-          (\p -> not (T.isInfixOf (T.pack p) tw))
-          ["https", "http", "RT @", "@", "#"]
-
-fromTweet :: Tweet -> (T.Text, Integer)
-fromTweet t = (text t, Twitter.id t)
-
+    ok :: T.Text -> Bool
+    ok tw = all
+      (\p -> not (T.isInfixOf (T.pack p) tw))
+      ["https", "http", "RT @", "@", "#"]

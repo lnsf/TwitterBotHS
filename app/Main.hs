@@ -6,10 +6,10 @@ import           Markov
 import           Twitter
 import           Data.Block
 import           Data.List
+import           Data.Tweet
 import           Control.Monad
 import           System.Environment
 import           System.Exit
-import           Prelude hiding (id)
 import qualified Data.Text as T
 
 main :: IO ()
@@ -35,7 +35,7 @@ add = do
     if null xs
       then return 0
       else getLatestId c
-  ts <- filter (\(_, id) -> id > minId) . map fromTweet <$> getTweets
+  ts <- filter (\(_, i) -> i > minId) . map fromTweet <$> getTweets
     :: IO [(T.Text, Integer)]
   m <- createMcb
   bs <- concat <$> mapM (\(t, i) -> flip createBlocks i <$> tokenize m t) ts
