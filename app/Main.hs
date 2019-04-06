@@ -50,7 +50,7 @@ tweet = do
     xs <- readDB c
     if null xs
       then error "No data in Database"
-      else return (takeHeads xs, xs \\ takeHeads xs) :: IO ([Block], [Block])
+      else (return . partition isHead) xs :: IO ([Block], [Block])
   tw <- createTweet hs bs :: IO (T.Text, [Integer])
   res <- (postTweet . fst) tw :: IO Bool
   if res
@@ -58,7 +58,7 @@ tweet = do
     else return $ error "Failed to tweet"
   forM_ (snd tw) $ \id -> deleteById c id
   where
-    takeHeads = filter (\b -> (get1 . block) b == T.empty)
+    isHead b = (get1 . block) b == T.empty
 
 clean :: IO ()
 clean = deleteAll =<< createConnection
