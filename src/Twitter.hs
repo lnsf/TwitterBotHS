@@ -85,7 +85,10 @@ getMentions = do
     Right ts -> (\n -> filter (match n) ts) <$> getName
   where
     match :: String -> Mention -> Bool
-    match n m = isConversation m && isReplyToMe n m && (not . favorited) m
+    match n m = (isConversation m || isAtMention m) 
+                && isReplyToMe n m && (not . favorited) m
+
+    isAtMention = T.isInfixOf (T.pack "会話") . mentionText
 
     isReplyToMe n m = case replyTo m of
       Just x  -> x == n
