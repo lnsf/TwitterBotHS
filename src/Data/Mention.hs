@@ -29,15 +29,13 @@ mentionId = id
 
 mentionText = text
 
-fromMention :: Mention -> (Integer, Maybe String, String, Bool)
+fromMention :: Mention -> (Integer, String)
 fromMention m = 
   let
     i = id m
-    r = in_reply_to_screen_name m
     u = (screen_name . user) m
-    f = favorited m
   in
-    (i, r, u, f)
+    (i, u)
 
 
 

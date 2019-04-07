@@ -16,7 +16,7 @@ main :: IO ()
 main = do
   ms <- map fromMention <$> getMentions
   m <- createMcb
-  forM_ ms $ \(i, _, u, _) -> do
+  forM_ ms $ \(i, u) -> do
     putStrLn u
     ts <- map fromTweet <$> getUserTweets u
     (hs, bs) <- do
