@@ -7,7 +7,7 @@
 
 ### Tweet
 
-- Get tweets and insert database it.
+- Get tweets and add to database.
 ```
 tbot add
 ```
