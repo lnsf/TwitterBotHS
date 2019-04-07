@@ -113,7 +113,7 @@ postReply i s = do
     req <- parseRequest "https://api.twitter.com/1.1/statuses/update.json"
     man <- newManager tlsManagerSettings
     let postReq = urlEncodedBody [ (B8.pack "status", encodeUtf8 s)
-                                 , (B8.pack "in_reply_to_status_id", (encodeUtf8 . T.pack . show) i)
+                                 , (B8.pack "in_reply_to_status_id", (B8.pack . show) i)
                                  ] req
     auth <- getAuth
     cred <- getCred
@@ -126,7 +126,7 @@ createFab i = do
   res <- do
     req <- parseRequest "https://api.twitter.com/1.1/favorites/create.json"
     man <- newManager tlsManagerSettings
-    let postReq = urlEncodedBody [(B8.pack "id", (encodeUtf8 . T.pack . show) i)] req
+    let postReq = urlEncodedBody [(B8.pack "id", B8.pack $ show i)] req
     auth <- getAuth
     cred <- getCred
     signedReq <- signOAuth auth cred postReq

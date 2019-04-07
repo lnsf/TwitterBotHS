@@ -28,8 +28,7 @@ main = doTask =<< getArgs
       | otherwise = usage >> exitFailure
 
 add :: IO ()
-add = do
-  c <- createConnection
+add = withConnection $ \c -> do
   minId <- do
     xs <- readDB c
     if null xs
@@ -44,8 +43,7 @@ add = do
   putStrLn $ "Added " ++ (show . length) bs ++ " Blocks"
 
 tweet :: IO ()
-tweet = do
-  c <- createConnection
+tweet = withConnection $ \c -> do
   (hs, bs) <- do
     xs <- readDB c
     if null xs
@@ -58,16 +56,14 @@ tweet = do
     else return $ error "Failed to tweet"
   forM_ (snd tw) $ \id -> deleteById c id
   where
-    isHead b = (get1 . block) b == T.empty
+    isHead b = getW1 b == T.empty
 
 clean :: IO ()
-clean = deleteAll =<< createConnection
+clean = withConnection deleteAll
 
 createTweet hs bs = do
-  h <- takeRdm hs
-  tw <- fromBlocks <$> connectBlocks h (bs \\ [h])
-  -- length < 20
-  -- bring in from more than 2 tweets
+  h <- takeRandom hs
+  tw <- fromBlocks <$> connectBlocks h bs
   if isMatch tw
     then return tw
     else createTweet hs bs

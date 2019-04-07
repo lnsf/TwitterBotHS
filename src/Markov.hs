@@ -1,5 +1,6 @@
 module Markov where
 
+import           Prelude hiding (id)
 import           Lib
 import           Data.Block
 import           Text.MeCab
@@ -15,7 +16,6 @@ tokenize mcb s = do
   ws <- map nodeSurface <$> parseToNodes mcb s
   return $ addSpace ws
   -- for english vocablary
-
     where
       addSpace :: [T.Text] -> [T.Text]
       addSpace [] = []
@@ -32,28 +32,30 @@ tokenize mcb s = do
 
 createBlocks :: [T.Text] -> Integer -> [Block]
 createBlocks [f, s] _ = []
-createBlocks (f:s:t:ws) i = newBlock (f, s, t) i:createBlocks (s:t:ws) i
+createBlocks (f:s:t:ws) i = createBlock (f, s, t) i:createBlocks (s:t:ws) i
 
 connectBlocks :: Block -> [Block] -> IO [Block]
 connectBlocks b bs = do
   next <- getNext b bs
   return $ b:next
   where
-    cancon :: Block -> [Block] -> [Block]
-    cancon b bs = [x | x <- bs, (get1 . block) x == (get3 . block) b]
+    connectable :: Block -> [Block] -> [Block]
+    connectable b = filter (\x -> getW1 x == getW3 b)
 
     getNext :: Block -> [Block] -> IO [Block]
-    getNext b bs = if null $ cancon b bs
-                   then return []
-                   else do
-                     b2 <- takeRdm $ cancon b bs
-                     b3 <- getNext b2 (bs \\ [b2])
-                     return $ b2:b3
+    getNext b bs = do
+      let
+        con = connectable b bs
+      if null con 
+        then return []
+        else do
+          b2 <- takeRandom con
+          b3 <- getNext b2 (bs \\ [b2])
+          return $ b2:b3
 
 fromBlocks :: [Block] -> (T.Text, [Integer])
 fromBlocks xs =
-  ( foldr
-      (\b -> T.append ((get1 . block) b `T.append` (get2 . block) b))
-      T.empty
-      xs
-  , map Data.Block.id xs)
+  let
+    b2s = map getW2 xs
+    b3s = map getW3 xs
+  in (foldl1 T.append (zipWith T.append b2s b3s), map getBId xs)

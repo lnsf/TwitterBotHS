@@ -4,9 +4,9 @@ import           Data.List
 import qualified Data.Text as T
 import qualified System.Random as R
 
-takeRdm :: [a] -> IO a
-takeRdm [] = error "Empty list"
-takeRdm xs = do
+takeRandom :: [a] -> IO a
+takeRandom [] = error "Empty list"
+takeRandom xs = do
   idx <- R.getStdRandom (R.randomR (0, length xs - 1))
   return $ xs !! idx
 
