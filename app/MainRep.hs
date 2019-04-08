@@ -26,20 +26,8 @@ main = do
     rep <- postReply i $ T.append (T.pack ("@" ++ u ++ " ")) tw
     unless rep exitFailure
     fav <- createFab i
-    putStrLn (T.unpack tw)
+    putStrLn $ T.unpack tw
     unless fav exitFailure
   where
     isHead b = getW1 b == T.empty
-
-    createTweet hs bs = do
-      h <- takeRandom hs
-      tw <- fromBlocks <$> connectBlocks h bs
-      if isMatch tw
-        then return tw
-        else createTweet hs bs
-      where
-        isMatch (str, ids) = T.length str <= 30 && cost ids < length ids `div` 2
-
-        cost :: [Integer] -> Int
-        cost = sum . map (flip (-) 1 . length) . group
 

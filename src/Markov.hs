@@ -53,9 +53,25 @@ connectBlocks b bs = do
           b3 <- getNext b2 (bs \\ [b2])
           return $ b2:b3
 
-fromBlocks :: [Block] -> (T.Text, [Integer])
-fromBlocks xs =
-  let
-    b2s = map getW2 xs
-    b3s = map getW3 xs
-  in (foldl1 T.append (zipWith T.append b2s b3s), map getBId xs)
+createTweet :: [Block] -> [Block] -> IO (T.Text, [Integer])
+createTweet hs bs = do
+  h <- takeRandom hs
+  bs <- connectBlocks h bs
+  if isMatch bs
+    then return (fmtToSentence bs, map getBId bs)
+    else createTweet hs bs
+  where
+    isMatch bs = 
+      let 
+        len = length bs
+      in
+        len <= 20 && cost (map getBId bs) < len `div` 2
+
+    cost = sum . map (flip (-) 1 . length) . group
+
+    fmtToSentence xs =
+      let
+        b2s = map getW2 xs
+        b3s = map getW3 xs
+      in 
+        foldl1 T.append (zipWith T.append b2s b3s)

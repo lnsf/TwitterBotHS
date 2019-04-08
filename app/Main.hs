@@ -60,15 +60,3 @@ tweet = withConnection $ \c -> do
 
 clean :: IO ()
 clean = withConnection deleteAll
-
-createTweet hs bs = do
-  h <- takeRandom hs
-  tw <- fromBlocks <$> connectBlocks h bs
-  if isMatch tw
-    then return tw
-    else createTweet hs bs
-  where
-    isMatch (str, ids) = T.length str <= 30 && cost ids < length ids `div` 2
-
-    cost :: [Integer] -> Int
-    cost = sum . map (flip (-) 1 . length) . group
