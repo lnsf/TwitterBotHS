@@ -46,7 +46,7 @@ connectBlocks b bs = do
     getNext b bs = do
       let
         con = connectable b bs
-      if null con 
+      if null con
         then return []
         else do
           b2 <- takeRandom con
@@ -56,13 +56,13 @@ connectBlocks b bs = do
 createTweet :: [Block] -> [Block] -> IO (T.Text, [Integer])
 createTweet hs bs = do
   h <- takeRandom hs
-  bs <- connectBlocks h bs
-  if isMatch bs
-    then return (fmtToSentence bs, map getBId bs)
+  bls <- connectBlocks h bs
+  if isMatch bls
+    then return (fmtToSentence bls, map getBId bls)
     else createTweet hs bs
   where
-    isMatch bs = 
-      let 
+    isMatch bs =
+      let
         len = length bs
       in
         len <= 20 && cost (map getBId bs) < len `div` 2
@@ -73,5 +73,5 @@ createTweet hs bs = do
       let
         b2s = map getW2 xs
         b3s = map getW3 xs
-      in 
+      in
         foldl1 T.append (zipWith T.append b2s b3s)
