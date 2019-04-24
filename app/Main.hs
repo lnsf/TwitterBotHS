@@ -52,7 +52,7 @@ tweet = withConnection $ \c -> do
   tw <- createTweet hs bs :: IO (T.Text, [Integer])
   res <- (postTweet . fst) tw :: IO Bool
   if res
-    then putStrLn $ (T.unpack . fst) tw
+    then putStrLn $ (T.unpack . fst) tw ++ " " ++ (show . length . snd) tw
     else return $ error "Failed to tweet"
   forM_ (snd tw) $ \id -> deleteById c id
   where

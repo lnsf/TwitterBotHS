@@ -65,7 +65,7 @@ createTweet hs bs = do
       let
         len = length bs
       in
-        len <= 20 && cost (map getBId bs) < len `div` 2
+        len <= 10 && cost (map getBId bs) < len `div` 2 
 
     cost = sum . map (flip (-) 1 . length) . group
 
