@@ -1,8 +1,8 @@
 module Lib where
 
 import           Data.List
-import qualified Data.Text as T
-import qualified System.Random as R
+import qualified Data.Text                     as T
+import qualified System.Random                 as R
 
 takeRandom :: [a] -> IO a
 takeRandom [] = error "Empty list"

@@ -9,25 +9,27 @@ import           Data.Mention
 import           Data.Tweet
 import           Control.Monad
 import           System.Exit
-import           Prelude hiding (id)
-import qualified Data.Text as T
+import qualified Data.Text                     as T
 
 main :: IO ()
 main = do
   ms <- map fromMention <$> getMentions
-  m <- createMcb
+  m  <- createMcb
   forM_ ms $ \(i, u) -> do
     putStrLn u
-    ts <- map fromTweet <$> getUserTweets u
+    ts       <- map fromTweet <$> getUserTweets u
     (hs, bs) <- do
-      bls <- concat <$> mapM (\(t, i) -> flip createBlocks i <$> tokenize m t) ts
+      bls <-
+        concat <$> mapM (\(t, i) -> flip createBlocks i <$> tokenize m t) ts
       (return . partition isHead) bls
-    tw <- fst <$> createTweet hs bs
-    rep <- postReply i $ T.append (T.pack ("@" ++ u ++ " ")) tw
+    tw <- fst <$> do
+      maybetw <- createTweet hs bs
+      case maybetw of
+        Just jtw -> return jtw
+        Nothing  -> error "Failed to create"
+    rep <- postReply i $ "@" ++ u ++ " " ++ tw
     unless rep exitFailure
     fav <- createFab i
-    putStrLn $ T.unpack tw
+    putStrLn tw
     unless fav exitFailure
-  where
-    isHead b = getW1 b == T.empty
-
+  where isHead b = getW1 b == ""

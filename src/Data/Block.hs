@@ -1,14 +1,26 @@
-module Data.Block (Block, createBlock, getW1, getW2, getW3, getWords, getBId)where
+module Data.Block
+  ( Block
+  , createBlock
+  , getW1
+  , getW2
+  , getW3
+  , getWords
+  , getBId
+  )
+where
 
 import           Lib
-import           Prelude hiding (id, words)
-import qualified Data.Text as T
+import           Prelude                 hiding ( id
+                                                , words
+                                                )
+import qualified Data.Text                     as T
 
-data Block = MkBlock { words :: (T.Text, T.Text, T.Text), id :: Integer }
+data Block = MkBlock { words :: (String, String, String), id :: Integer }
   deriving Show
 
 instance Eq Block where
-  (MkBlock (a, b, c) _) == (MkBlock (a', b', c') _) = a == a' && b == b' && c == c'
+  (MkBlock (a, b, c) _) == (MkBlock (a', b', c') _) =
+    a == a' && b == b' && c == c'
 
 createBlock = MkBlock
 
