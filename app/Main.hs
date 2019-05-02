@@ -31,7 +31,7 @@ add = withConnection $ \c -> do
     xs <- readDB c
     if null xs then return 0 else getLatestId c
   ts <- filter ((<=) minId . snd) . map fromTweet <$> getTweets
-  m  <- createMcb
+  m  <- createMecab
   bs <- concat <$> mapM (\(t, i) -> flip createBlocks i <$> tokenize m t) ts
   mapM_ (addToDB c) bs
   putStrLn $ "Added " ++ (show . length) bs ++ " Blocks"
@@ -42,7 +42,7 @@ tweet = withConnection $ \c -> do
     xs <- readDB c
     if null xs
       then error "No data in Database"
-      else (return . partition isHead) xs
+      else (return . separateHeadsBodies) xs
   maybetw <- createTweet hs bs
   case maybetw of
     Just tw -> do
@@ -52,7 +52,6 @@ tweet = withConnection $ \c -> do
         else return $ error "Failed to tweet"
       forM_ (snd tw) (deleteById c)
     Nothing -> clean *> add *> tweet
-  where isHead b = getW1 b == ""
 
 clean :: IO ()
 clean = withConnection deleteAll

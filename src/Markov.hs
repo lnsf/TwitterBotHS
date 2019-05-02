@@ -5,34 +5,20 @@ import           Data.Block
 import           Text.MeCab
 import           Data.List.Split
 import           Data.List
+import           Data.Maybe
+import           Control.Monad
 
-createMcb :: IO MeCab
-createMcb = new2 ""
+createMecab :: IO MeCab
+createMecab = new2 ""
 
 tokenize :: MeCab -> String -> IO [String]
-tokenize mcb s = do
-  ws <- map nodeSurface <$> parseToNodes mcb s
-  return $ addSpace ws
-  -- for english vocablary
-
- where
-  addSpace :: [String] -> [String]
-  addSpace []             = []
-  addSpace [w           ] = [w]
-  addSpace (w1 : w2 : ws) = if onlyAlp w1 w2
-    then w1 : " " : addSpace (w2 : ws)
-    else w1 : addSpace (w2 : ws)
-
-  -- onlyAlp "Hello" "World" = True
-  -- onlyAlp "Hello" "こんにちは" = False
-  onlyAlp :: String -> String -> Bool
-  onlyAlp w1 w2 = all (not . null) [w1, w2]
-    && all (all (`elem` ['A' .. 'Z'] ++ ['a' .. 'z'])) [w1, w2]
+tokenize mcb s = map nodeSurface <$> parseToNodes mcb s
 
 createBlocks :: [String] -> Integer -> [Block]
-createBlocks [f, s] _ = []
-createBlocks (f : s : t : ws) i =
-  createBlock (f, s, t) i : createBlocks (s : t : ws) i
+createBlocks ws i =
+  let (_:w2:ws3) = ws
+      ws2 = (w2:ws3)
+  in zipWith3 (\a b c -> createBlock (a,b,c) i) ws ws2 ws3
 
 connectBlocks :: Block -> [Block] -> IO [Block]
 connectBlocks b bs = do
@@ -53,17 +39,17 @@ connectBlocks b bs = do
         return $ b2 : b3
 
 createTweet :: [Block] -> [Block] -> IO (Maybe (String, [Integer]))
-createTweet = create 0
+createTweet hs bs = foldM
+  (\a _ -> if isNothing a then create hs bs else return a)
+  Nothing
+  [1 .. 100]
  where
-  create c hs bs = do
+  create hs bs = do
     h   <- takeRandom hs
     bls <- connectBlocks h bs
-    loop bls c hs bs
-
-  loop bls c hs bs
-    | isMatch bls = return $ Just (fmtToSentence bls, map getBId bls)
-    | c < 100     = create (c + 1) hs bs
-    | otherwise   = return Nothing
+    if isMatch bls
+      then return $ Just (fmtToSentence bls, map getBId bls)
+      else return Nothing
 
   isMatch bs =
     let len = length bs in len <= 10 && cost (map getBId bs) < len `div` 2
@@ -71,6 +57,8 @@ createTweet = create 0
   cost = sum . map (flip (-) 1 . length) . group
 
   fmtToSentence xs =
-    let b2s = map getW2 xs
-        b3s = map getW3 xs
-    in  foldl1 (++) $ zipWith (++) b2s b3s
+    let bs2 = map getW2 xs
+        bs3 = map getW3 xs
+    in  ((foldl1 (++) .) . zipWith (++)) bs2 bs3
+
+separateHeadsBodies = partition ((==) "" . getW1)

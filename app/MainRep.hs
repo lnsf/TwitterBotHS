@@ -14,14 +14,14 @@ import qualified Data.Text                     as T
 main :: IO ()
 main = do
   ms <- map fromMention <$> getMentions
-  m  <- createMcb
+  m  <- createMecab
   forM_ ms $ \(i, u) -> do
     putStrLn u
     ts       <- map fromTweet <$> getUserTweets u
     (hs, bs) <- do
       bls <-
         concat <$> mapM (\(t, i) -> flip createBlocks i <$> tokenize m t) ts
-      (return . partition isHead) bls
+      (return . separateHeadsBodies) bls
     tw <- fst <$> do
       maybetw <- createTweet hs bs
       case maybetw of
@@ -32,4 +32,3 @@ main = do
     fav <- createFab i
     putStrLn tw
     unless fav exitFailure
-  where isHead b = getW1 b == ""
