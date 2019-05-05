@@ -7,7 +7,10 @@ import           Twitter
 import           Data.Block
 import           Data.List
 import           Data.Tweet
+import           Data.Maybe
+import           Data.Functor
 import           Control.Monad
+import           Control.Applicative
 import           System.Environment
 import           System.Exit
 
@@ -19,11 +22,13 @@ main = doTask =<< getArgs
     putStrLn $ "Usage: " ++ pname ++ " [add|clean|tweet|help]"
 
   doTask [] = usage *> exitFailure
-  doTask (arg : _) | arg `isPrefixOf` "add"   = add
-                   | arg `isPrefixOf` "clean" = clean
-                   | arg `isPrefixOf` "tweet" = tweet
-                   | arg `isPrefixOf` "help"  = usage *> exitSuccess
-                   | otherwise                = usage *> exitFailure
+  doTask (arg : _) =
+    let (~>) p f = f <$ guard (arg `isPrefixOf` p)
+    in  fromMaybe (usage *> exitFailure)
+          $   "add"   ~>  add
+          <|> "clean" ~>  clean
+          <|> "tweet" ~>  tweet
+          <|> "help"  ~>  (usage *> exitSuccess)
 
 add :: IO ()
 add = withConnection $ \c -> do
