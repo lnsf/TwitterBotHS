@@ -6,7 +6,9 @@ import           Text.MeCab
 import           Data.List.Split
 import           Data.List
 import           Data.Maybe
+import           Data.Functor
 import           Control.Monad
+import           Control.Monad.State
 
 createMecab :: IO MeCab
 createMecab = new2 ""
@@ -39,17 +41,17 @@ connectBlocks b bs = do
         return $ b2 : b3
 
 createTweet :: [Block] -> [Block] -> IO (Maybe (String, [Integer]))
-createTweet hs bs = foldM
-  (\a _ -> if isNothing a then create hs bs else return a)
-  Nothing
-  [1 .. 100]
+createTweet hs bs = (`execStateT` Nothing) $ forM_ [1..100] $ \_ -> do
+  v <- get
+  when (isNothing v) $ do
+    nv <- lift $ create hs bs
+    put nv
+
  where
   create hs bs = do
     h   <- takeRandom hs
     bls <- connectBlocks h bs
-    if isMatch bls
-      then return $ Just (fmtToSentence bls, map getBId bls)
-      else return Nothing
+    return ((fmtToSentence bls, map getBId bls) <$ guard (isMatch bls))
 
   isMatch bs =
     let len = length bs in len <= 10 && cost (map getBId bs) < len `div` 2
