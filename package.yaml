@@ -13,6 +13,7 @@ tests:
 copyright: 2019 lnsf
 maintainer: lnsf03@gmail.com
 dependencies:
+- mtl
 - postgresql-simple
 - yaml
 - random
@@ -34,14 +35,6 @@ author: lnsf
 github: lnsf/DBTwitterBot
 license: BSD3
 executables:
-  tbot:
-    main: app/Main.hs
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - TwitterBotHS
   tbot-rep:
     main: app/MainRep.hs
     ghc-options:
@@ -49,5 +42,15 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - mtl
+    - TwitterBotHS
+  tbot:
+    main: app/Main.hs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - mtl
     - TwitterBotHS
 description: Please see the README on GitHub at <https://github.com/lnsf/DBTwitterBot#readme>
