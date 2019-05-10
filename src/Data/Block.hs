@@ -1,19 +1,8 @@
-module Data.Block
-  ( Block
-  , createBlock
-  , getW1
-  , getW2
-  , getW3
-  , getWords
-  , getBId
-  )
-where
+module Data.Block (Block, createBlock, getW1, getW2, getW3, getWords, getBId) where
 
+import qualified Data.Text as T
 import           Lib
-import           Prelude                 hiding ( id
-                                                , words
-                                                )
-import qualified Data.Text                     as T
+import           Prelude   hiding (id, words)
 
 data Block = MkBlock { words :: (String, String, String), id :: Integer }
   deriving Show

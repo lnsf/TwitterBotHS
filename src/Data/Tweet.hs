@@ -1,16 +1,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Data.Tweet
-  ( Tweet(text, user)
-  , User(..)
-  , tweetId
-  , fromTweet
-  )
-where
+module Data.Tweet (Tweet(text, user), User(..), tweetId, fromTweet) where
 
-import           Prelude                 hiding ( id )
 import           Data.Aeson
 import           GHC.Generics
+import           Prelude      hiding (id)
 
 newtype User = User { screen_name :: String }
   deriving (Show, Generic)

@@ -1,11 +1,18 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Config where
+module Bot.Config
+    ( Config(..)
+    , Keys
+    , getConfig
+    , accessToken
+    , accessTokenSecret
+    , consumerKey
+    , consumerKeySecret) where
 
+import           Data.List
+import qualified Data.Yaml          as Y
 import           GHC.Generics
 import           System.Environment
-import qualified Data.Yaml as Y
-import Data.List
 
 data Config = Config { name :: String, keys :: Keys }
   deriving (Show, Generic)
@@ -21,3 +28,11 @@ getConfig :: IO Config
 getConfig = do
   p <- dropWhileEnd (/= '/') <$> getExecutablePath
   either (error . show) id <$> Y.decodeFileEither (p ++ "config.yaml")
+
+accessToken = at
+
+accessTokenSecret = as
+
+consumerKey = ck
+
+consumerKeySecret = cs
